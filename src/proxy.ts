@@ -4,23 +4,29 @@ import path from "path";
 const envPath = path.join(__dirname, "../../.env");
 dotenv.config({ path: envPath });
 
+import logger from "./logger";
+
 const serverPORT = process.env.SERVER_PORT;
+
+logger.error("test");
 
 if (!serverPORT) {
     logger.error("No server port provided in .ENV file.");
+    logger.on("finish", () => { // Waits for logger to done all operations
+        console.log("Logger finished the work, killing process.");
+    });
+    logger.end(); // Kills logger to stop the process
     process.exit(1);
 }
 
 import { Router } from "express";
 import axios from "axios";
-import logger from "./logger";
 
 const router = Router();
 
 router.post("/*", async (req, res) => {
     try {
         const route = req.originalUrl;
-
 
         const response = await axios.post(`http://localhost:${serverPORT}${route}`, req.body, {
             headers: { "Content-Type": req.headers["content-type"] }

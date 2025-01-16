@@ -24,7 +24,7 @@ const logger = winston.createLogger({
                 winston.format.json()
             ),
         }),
-    ]
+    ],
 });
 
 export default logger;
