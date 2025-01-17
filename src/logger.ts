@@ -1,27 +1,41 @@
 import winston from "winston";
 
+const { combine, timestamp, json, simple, printf, errors, colorize } = winston.format;
+
+const errorStamp = printf(({ level, message, timestamp, stack }) => {
+    const logMessage = stack || message;
+    return `[${level}]: ${logMessage} \n Timestamp: ${timestamp}`;
+});
+
 const logger = winston.createLogger({
     level: "info",
-    format: winston.format.combine(
-        winston.format.timestamp(),
-        winston.format.json(),
+    format: combine(
+        errors({ stack: true }),
+        timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
+        errorStamp,
     ),
     transports: [
-        new winston.transports.Console({ format: winston.format.simple() }),
-        new winston.transports.File({
-            filename: 'logs/info.log',
-            level: 'info',
-            format: winston.format.combine(
-                winston.format.timestamp(),
-                winston.format.json()
+        new winston.transports.Console({
+            format: combine(
+                timestamp(),
+                colorize(),
+                errorStamp,
             ),
         }),
         new winston.transports.File({
-            filename: 'logs/errors.log',
+            level: 'info',
+            filename: 'logs/info.log',
+            format: combine(
+                timestamp(),
+                json(),
+            ),
+        }),
+        new winston.transports.File({
             level: 'error',
-            format: winston.format.combine(
-                winston.format.timestamp(),
-                winston.format.json()
+            filename: 'logs/errors.log',
+            format: combine(
+                timestamp(),
+                errorStamp,
             ),
         }),
     ],
