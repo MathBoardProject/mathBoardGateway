@@ -1,17 +1,10 @@
-import dotenv from "dotenv";
-import path from "path";
-
-const envPath = path.join(__dirname, "../../.env");
-dotenv.config({ path: envPath });
-
 import logger from "./logger";
 
-const serverPORT = process.env.SERVER_PORT;
+const GATEWAY_PORT = process.env.GATEWAY_PORT;
 
-logger.error("test");
-
-if (!serverPORT) {
-    logger.error("No server port provided in .ENV file.");
+if (!GATEWAY_PORT) {
+    const error = new Error("No GATEWAY_PORT specified in .env file");
+    logger.error(error.stack);
     logger.on("finish", () => { // Waits for logger to done all operations
         console.log("Logger finished the work, killing process.");
     });
@@ -28,7 +21,7 @@ router.post("/*", async (req, res) => {
     try {
         const route = req.originalUrl;
 
-        const response = await axios.post(`http://localhost:${serverPORT}${route}`, req.body, {
+        const response = await axios.post(`http://localhost:${GATEWAY_PORT}${route}`, req.body, {
             headers: { "Content-Type": req.headers["content-type"] }
         });
         res.json(response.data);
@@ -36,10 +29,7 @@ router.post("/*", async (req, res) => {
     } catch (error) {
         const err = (error as Error);
 
-        logger.error("Error during gateway pass", {
-            message: err.message,
-            stack: err.stack,
-        });
+        logger.error(err.stack);
 
         if (axios.isAxiosError(err)) {
             res.status(err.response?.status || 500)
@@ -52,7 +42,7 @@ router.post("/*", async (req, res) => {
             res.status(500)
                 .json({
                     error: "Unknown error occured",
-                    details: err.message
+                    details: err.message,
                 });
         }
     }
