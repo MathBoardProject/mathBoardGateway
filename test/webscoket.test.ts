@@ -1,20 +1,22 @@
-import { Server } from "http";
-import { AddressInfo } from "net";
 import logger from "../src/logger";
-// import request from "supertest"; // Delete if it will seem useless
 
-import App from "../src/app";
+import WebSocketServer from "../src/websocket";
+import { createServer } from "http";
 import { io, Socket } from "socket.io-client";
 
-describe("Socket Server Communication", () => {
-   let app: App;
+describe("WebSocket Server Communication", () => {
+   let webSocketService: WebSocketServer;
    let socketClient: Socket;
-   const PORT = process.env.GATEWAY_PORT;
+   const PORT = process.env.TEST_GATEWAY_PORT || 3000;
 
    beforeAll(() => {
-      app = new App();
-      app.listen();
+      const server = createServer();
+      //@ts-ignore // Does not use redis in that test
+      webSocketService = new WebSocketServer(server);
 
+      server.listen(PORT, () => {
+         console.log(`Testing websocket service. PORT[${PORT}]`);
+      });
       jest.useRealTimers();
    });
 
@@ -23,8 +25,7 @@ describe("Socket Server Communication", () => {
    });
 
    afterAll(() => {
-      app.close();
-   })
+   });
 
    afterEach(() => {
       socketClient.close();
@@ -40,14 +41,14 @@ describe("Socket Server Communication", () => {
       socketClient.on("pong", (data) => {
          const latency = Date.now() - timeStart;
          console.log(`${data} [Latency: ${latency}ms]`);
-         
+
          // Warn if latency is over 1 second
-         if(latency > 1000){
+         if (latency > 1000) {
             logger.warn(`Latency is greater than ${latency}ms!`);
          }
 
          done();
       });
    });
-   
+
 });

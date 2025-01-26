@@ -1,33 +1,28 @@
 import { Server as HTTPServer } from "http";
 import { Server as SocketIOServer, Socket } from "socket.io";
+import RedisClient from "./redisClient";
 
-class SocketServer {
+export default class WebSocketServer {
     private io: SocketIOServer;
+    protected redisClient: RedisClient;
 
-    constructor(httpServer: HTTPServer, options: Partial<SocketIOServer["opts"]> = {}) {
-        this.io = new SocketIOServer(httpServer, options);
-    }
+    constructor(httpServer: HTTPServer, redisClient: RedisClient, SocketIO_Options: Partial<SocketIOServer["opts"]> = {}) {
+        //SocketIO definition
+        this.io = new SocketIOServer(httpServer, SocketIO_Options);
+        this.redisClient = redisClient;
 
-    public startListening(): void {
+        //Routing
         this.io.on("connection", (socket: Socket) => {
             socket.on("ping", () => {
                 socket.emit("pong", `Pong!`);
             });
 
             socket.on("disconnect", () => {
-                console.log(`Client ID[${socket.id}] disconnected.`);
+                console.log(`Client SOCKET[${socket.id}] disconnected.`);
             });
 
-            socket.on("pushStrokes", (data)=>{ // data (userId, boardID) is type containing user data and stroke list
-
-            });
-
-            socket.on("deleteStrokes", (data)=>{
-
-            });
-
-            socket.on("editStrokes", (data)=>{
-
+            socket.onAny((event, request,...args) => {
+                
             });
         });
     }
@@ -36,5 +31,3 @@ class SocketServer {
         this.io.close();
     }
 }
-
-export default SocketServer;
